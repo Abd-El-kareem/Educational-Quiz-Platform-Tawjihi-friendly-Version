@@ -3,6 +3,9 @@
 A full-stack educational quiz platform built with Django, Django REST Framework,
 and vanilla JavaScript.
 
+# Demo
+![Quiz Platform Demo](demo.gif)
+
 ## Features
 
 - **Auth**: register, log in, log out. Authenticated users and anonymous guests

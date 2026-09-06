@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n_tags %}
+{% load quiz_filters %}
+{% block title %}{% trf "Review: {title}" title=score.quiz.title %}{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <style>
+    .ai-answer .katex {
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+    .ai-answer .katex-display {
+      direction: ltr;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+  <div class="container pb-5" style="max-width: 860px;">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}"><i class="fa-solid fa-house me-1"></i>{% tr "Home" %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'scoring:score_list' %}">{% tr "My Scores" %}</a></li>
+        <li class="breadcrumb-item active">{{ score.quiz.title }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+      <div>
+        <h1 class="page-title h3 mb-1">{{ score.quiz.title }}</h1>
+        <span class="review-meta">{% trf "Attempt {number}" number=score.attempt_number %} &middot; {{ score.completed_at|date:"Y-m-d H:i" }} &middot; {{ score.quiz.category.name }}</span>
+      </div>
+      <span class="chip {% if score.earned == score.total %}chip-pts{% else %}chip-time{% endif %}" style="font-size: 1.05rem; padding: 0.5rem 1rem;">
+        {% if score.earned == score.total %}
+          <i class="fa-solid fa-circle-check"></i>
+        {% else %}
+          <i class="fa-solid fa-star-half-stroke"></i>
+        {% endif %}
+        {{ score.earned }} / {{ score.total }}
+      </span>
+    </div>
+
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+      <a href="{% url 'scoring:score_list' %}" class="btn btn-outline-accent btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i> {% tr "All my scores" %}
+      </a>
+      <a href="{% url 'quizzes:quiz_download' score.quiz.pk %}" class="btn btn-outline-accent btn-sm">
+        <i class="fa-solid fa-download me-1"></i> {% tr "Download quiz (offline)" %}
+      </a>
+    </div>
+
+    {% if score.answers.all %}
+      {% for sa in score.answers.all %}
+        <article class="card card-ember shadow-sm mb-3">
+          <div class="card-body p-4">
+            <div class="quiz-question-head mb-3">
+              <h2 class="question-title"><i class="fa-solid fa-circle-question title-icon me-2"></i>{% tr "Question" %} {{ forloop.counter }}</h2>
+              <span class="chip chip-pts"><i class="fa-solid fa-star"></i>{{ sa.points }} {% tr "pts" %}</span>
+            </div>
+            {% if sa.question_text|has_khatt_img %}
+              <p class="question-text mb-3 quote-question khatt-content">{{ sa.question_text|rich }}</p>
+            {% else %}
+              <p class="question-text mb-3 quote-question{% if sa.question and sa.question.math_enabled %} math-content{% endif %}">{{ sa.question_text }}</p>
+            {% endif %}
+            <ul class="list-group list-group-flush mb-3">
+              <li class="list-group-item answer-item {% if sa.is_correct %}answer-item-good{% else %}answer-item-bad{% endif %} d-flex justify-content-between align-items-center gap-2">
+                <div>
+                  {% if sa.answer_text|has_khatt_img %}
+                    <span class="visually-hidden">{% trf "Your answer: {value}" value=sa.answer_text|rich %}</span>
+                  {% else %}
+                    <span class="visually-hidden">{% trf "Your answer: {value}" value=sa.answer_text %}</span>
+                  {% endif %}
+                  <span class="answer-label d-block {% if sa.is_correct %}text-good{% else %}text-bad{% endif %}">{% tr "Your answer" %}</span>
+                  {% if sa.answer_text|has_khatt_img %}
+                    <span class="khatt-content">{{ sa.answer_text|rich }}</span>
+                  {% else %}
+                    <span class="{% if sa.question and sa.question.math_enabled %}math-content{% endif %}">{{ sa.answer_text }}</span>
+                  {% endif %}
+                </div>
+                <i class="fa-solid {% if sa.is_correct %}fa-check mark-ico{% else %}fa-xmark mark-ico{% endif %} fa-xl"></i>
+              </li>
+              {% if not sa.is_correct %}
+                <li class="list-group-item answer-item answer-item-good">
+                  {% if sa.correct_answer_text|has_khatt_img %}
+                    <span class="visually-hidden">{% trf "Correct answer: {value}" value=sa.correct_answer_text|rich %}</span>
+                  {% else %}
+                    <span class="visually-hidden">{% trf "Correct answer: {value}" value=sa.correct_answer_text %}</span>
+                  {% endif %}
+                  <span class="answer-label d-block text-good">{% tr "Correct answer" %}</span>
+                  {% if sa.correct_answer_text|has_khatt_img %}
+                    <span class="khatt-content">{{ sa.correct_answer_text|rich }}</span>
+                  {% else %}
+                    <span class="{% if sa.question and sa.question.math_enabled %}math-content{% endif %}">{{ sa.correct_answer_text }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+            </ul>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <button type="button" class="btn btn-sm btn-outline-accent ask-ai"
+                      data-question-id="{{ sa.question_id }}"
+                      data-score-id="{{ score.pk }}"
+                      data-url="{% url 'ai_feedback:ai_explain' sa.question_id %}">
+                <i class="fa-solid fa-robot me-1"></i> {% tr "Ask AI" %}
+              </button>
+              <span class="text-muted small fw-semibold">
+                {% if sa.is_correct %}
+                  <span style="color: var(--good);"><i class="fa-solid fa-circle-plus me-1"></i>+{{ sa.points }} {% tr "pts" %}</span>
+                {% else %}
+                  <span style="color: var(--bad);">0 {% tr "pts" %}</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="mt-3 ai-answer d-none"></div>
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <div class="card score-empty mx-auto" style="max-width: 560px;">
+        <div class="card-body text-center">
+          <i class="fa-solid fa-circle-info mb-3" style="font-size: 2.5rem;"></i>
+          <p class="text-muted mb-0">{% tr "No attempt details are available for this older score." %}</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="{% static 'js/math_render.js' %}"></script>
+  <script src="{% static 'js/ai_explainer.js' %}"></script>
+{% endblock %}

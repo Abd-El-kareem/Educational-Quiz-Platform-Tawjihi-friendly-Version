@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n_tags %}
+{% block title %}{% tr "Register" %}{% endblock %}
+{% block content %}
+  <div class="auth-view">
+    <div class="auth-card card">
+      <div class="auth-accent"></div>
+      <div class="card-body">
+        <div class="auth-icon"><i class="fa-solid fa-user-plus"></i></div>
+        <h1 class="auth-title h3 text-center mb-1">{% tr "Register" %}</h1>
+        <p class="auth-sub text-center mb-4">{% tr "Create your account to start your journey." %}</p>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button class="btn btn-accent w-100 mt-2" type="submit">
+            <i class="fa-solid fa-user-check me-1"></i>{% tr "Create account" %}
+          </button>
+        </form>
+        <p class="auth-switch text-center mt-4 mb-0">{% tr "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% tr "Log in" %}</a></p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

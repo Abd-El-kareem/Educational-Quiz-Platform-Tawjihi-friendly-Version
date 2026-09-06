@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n_tags %}
+{% block title %}{% tr "My Scores" %}{% endblock %}
+{% block content %}
+  <div class="container pb-5">
+    <h1 class="page-title mb-1"><i class="fa-solid fa-trophy title-icon me-2"></i>{% tr "My Scores" %}</h1>
+    <p class="text-muted mb-4">{% tr "Review your submitted attempts, one page per quiz." %}</p>
+
+    {% if scores %}
+      <div class="table-responsive shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-striped table-hover mb-0 bg-white">
+          <thead>
+            <tr>
+              <th scope="col">{% tr "Quiz" %}</th>
+              <th scope="col">{% tr "Attempt" %}</th>
+              <th scope="col">{% tr "Category" %}</th>
+              <th scope="col">{% tr "Score" %}</th>
+              <th scope="col">{% tr "Completed" %}</th>
+              <th scope="col" class="text-end"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for score in scores %}
+              <tr>
+                <td class="fw-semibold"><a href="{% url 'scoring:score_detail' score.pk %}">{{ score.quiz.title }}</a></td>
+                <td>{% trf "Attempt {number}" number=score.attempt_number %}</td>
+                <td class="text-muted">{{ score.quiz.category.name }}</td>
+                <td>
+                  <span class="chip {% if score.earned == score.total %}chip-pts{% else %}chip-time{% endif %}">
+                    {% if score.earned == score.total %}
+                      <i class="fa-solid fa-circle-check"></i>
+                    {% else %}
+                      <i class="fa-solid fa-star-half-stroke"></i>
+                    {% endif %}
+                    {{ score.earned }} / {{ score.total }}
+                  </span>
+                </td>
+                <td class="text-muted">{{ score.completed_at|date:"Y-m-d H:i" }}</td>
+                <td class="text-end">
+                  <div class="d-flex gap-2 justify-content-end align-items-center">
+                    <a class="btn btn-sm btn-outline-accent" href="{% url 'scoring:score_detail' score.pk %}">
+                      <i class="fa-solid fa-clipboard-list me-1"></i> {% tr "Review" %}
+                    </a>
+                    <a class="btn btn-sm btn-outline-accent" href="{% url 'quizzes:quiz_download' score.quiz.pk %}" title="{% tr "Download quiz (offline)" %}">
+                      <i class="fa-solid fa-download me-1"></i> {% tr "Download" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted small mt-2 mb-0"><i class="fa-solid fa-circle-check me-1"></i>{% tr "Full marks" %} &middot; <i class="fa-solid fa-star-half-stroke me-1"></i>{% tr "Partial score" %}</p>
+    {% else %}
+      <div class="card score-empty mx-auto" style="max-width: 560px;">
+        <div class="card-body text-center">
+          <i class="fa-solid fa-clipboard-question mb-3" style="font-size: 2.5rem;"></i>
+          <h2 class="h5 mb-2">{% tr "My Scores" %}</h2>
+          <p class="text-muted mb-4">{% tr "You haven't submitted any quizzes yet." %}</p>
+          <a href="{% url 'catalog:home' %}" class="btn btn-accent">{% tr "Browse quizzes" %}</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

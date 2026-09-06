@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n_tags %}
+{% load quiz_filters %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block extra_head %}
+  {% if has_math and math_engine == "katex" %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  {% endif %}
+{% endblock %}
+{% block content %}
+  <div class="container pb-5">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}"><i class="fa-solid fa-house me-1"></i>{% tr "Home" %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalog:category_detail' quiz.category.pk %}">{{ quiz.category.name }}</a></li>
+        <li class="breadcrumb-item active">{{ quiz.title }}</li>
+      </ol>
+    </nav>
+
+    {% if needs_access %}
+      <div class="card auth-card mx-auto mt-4" style="max-width: 480px;">
+        <div class="auth-accent"></div>
+        <div class="card-body">
+          <div class="auth-icon"><i class="fa-solid fa-lock"></i></div>
+          <h1 class="auth-title h4 text-center mb-1">{% tr "Private Quiz" %}</h1>
+          <p class="auth-sub text-center mb-4">{% tr "This quiz is private. Enter the access code to take it." %}</p>
+          <form method="post" action="{% url 'quizzes:quiz_access' quiz.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label" for="access-code">{% tr "Access code" %}</label>
+              <input type="text" id="access-code" name="access_code" class="form-control" placeholder="{% tr "Access code" %}" required autocomplete="off">
+            </div>
+            {% if error %}
+              <div class="alert alert-danger py-2"><i class="fa-solid fa-circle-exclamation me-2"></i>{% tr "Incorrect access code. Try again." %}</div>
+            {% endif %}
+            <button class="btn btn-accent w-100" type="submit"><i class="fa-solid fa-unlock me-1"></i> {% tr "Unlock" %}</button>
+          </form>
+        </div>
+      </div>
+
+    {% elif submitted %}
+      <div class="card auth-card mx-auto mt-4" style="max-width: 480px;">
+        <div class="auth-accent"></div>
+        <div class="card-body text-center">
+          <div class="auth-icon" style="background: var(--good);"><i class="fa-solid fa-flag-checkered"></i></div>
+          <h1 class="auth-title h4 mb-1">{% trf "Attempt {number} of {total} submitted" number=attempts_used total=attempts_total %}</h1>
+          <p class="text-muted mb-2">{% tr "Your score for this attempt is locked in." %}</p>
+          <div class="display-5 fw-bold my-3" style="color: var(--orange-600);">{{ last_score.earned }} / {{ last_score.total }}</div>
+          <p class="text-muted">{% trf "Total: {total} points" total=total_points %}</p>
+          {% if user.is_authenticated and last_score.pk %}
+            <a href="{% url 'scoring:score_detail' last_score.pk %}" class="btn btn-outline-accent w-100 mb-2">
+              <i class="fa-solid fa-clipboard-list me-1"></i> {% tr "Review answers" %}
+            </a>
+          {% endif %}
+          <a href="{% url 'quizzes:quiz_download' quiz.pk %}" class="btn btn-outline-accent w-100 mb-2">
+            <i class="fa-solid fa-download me-1"></i> {% tr "Download quiz (offline)" %}
+          </a>
+          {% if attempts_left > 0 %}
+            <form method="post" action="{% url 'quizzes:quiz_restart' quiz.pk %}">
+              {% csrf_token %}
+              <button class="btn btn-accent w-100" type="submit">
+                <i class="fa-solid fa-rotate-right me-1"></i> {% trf "Start attempt {next} of {total}" next=attempts_used|add:1 total=attempts_total %}
+              </button>
+            </form>
+          {% else %}
+            <p class="text-muted mt-3 mb-0">{% trf "You have used all {total} attempts for this quiz." total=attempts_total %}</p>
+          {% endif %}
+          <a href="{% url 'catalog:home' %}" class="btn btn-link link-ember mt-2">{% tr "Back to categories" %}</a>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="quiz-layout">
+        <aside class="quiz-aside" aria-label="Quiz info">
+          <span class="aside-quiz-icon"><i class="fa-solid fa-clipboard-question"></i></span>
+          <p class="aside-label mb-0">{% tr "Quiz" %}</p>
+          <p class="aside-value mb-2">{{ quiz.title }}</p>
+          <p class="aside-label mb-0">{% tr "Category" %}</p>
+          <p class="aside-value mb-2">{{ quiz.category.name }}</p>
+          <p class="aside-label mb-0">{% tr "Question" %}</p>
+          <p class="aside-value mb-2">{{ quiz.questions.count }}</p>
+          <hr class="aside-divider">
+          {% if time_limit_minutes %}
+            <span class="badge timer-badge mb-3" id="timer-badge">
+              <i class="fa-solid fa-hourglass-half me-1"></i>{% tr "Time Remaining" %}:
+              <span id="timer-count">--:--</span>
+            </span>
+          {% endif %}
+          <span class="chip chip-pts w-100 justify-content-center">
+            <i class="fa-solid fa-star"></i>{{ total_points }} {% tr "points total" %}
+          </span>
+          <a href="{% url 'quizzes:quiz_download' quiz.pk %}" class="btn btn-outline-accent btn-sm w-100 mt-3" title="{% tr "Download quiz (offline)" %}">
+            <i class="fa-solid fa-download me-1"></i> {% tr "Download" %}
+          </a>
+          <p class="aside-value mt-3 mb-0 small" style="color: var(--muted); font-weight: 400;">
+            <i class="fa-solid fa-cloud-arrow-up me-1"></i>{% tr "Your selections are saved automatically as you go." %}
+          </p>
+        </aside>
+
+        <div id="quiz-widget" class="min-w-0"
+             data-quiz-id="{{ quiz.pk }}"
+             data-answers-url="{% url 'scoring_api:save_answer' quiz.pk %}"
+             data-submit-url="{% url 'scoring_api:submit_quiz' quiz.pk %}"
+             {% if time_limit_minutes %}data-time-limit="{{ time_limit_minutes }}" data-remaining="{{ remaining_seconds }}"{% endif %}>
+
+          <div class="alert alert-warning d-none" id="unanswered-alert" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            {% tr "Please answer all questions before submitting:" %}
+            <ul class="unanswered-list" id="unanswered-list"></ul>
+          </div>
+
+          {% for question in quiz.questions.all %}
+            <div class="card shadow-sm mb-3 question-panel" id="question-{{ question.id }}" data-question-id="{{ question.id }}" style="display:none;">
+              <div class="card-body p-4">
+                <div class="quiz-question-head mb-3">
+                  <h2 class="question-title"><i class="fa-solid fa-circle-question title-icon me-2"></i>{% tr "Question" %} {{ forloop.counter }}</h2>
+                  <span class="chip chip-pts"><i class="fa-solid fa-star"></i>{{ question.points }} {% tr "pts" %}</span>
+                </div>
+                {% if question.text|has_khatt_img %}
+                  <p class="question-text mb-3 quote-question khatt-content">{{ question.text|rich }}</p>
+                {% elif question.math_enabled %}
+                  <p class="question-text mb-3 quote-question math-content">{{ question.text }}</p>
+                {% else %}
+                  <p class="question-text mb-3 quote-question">{{ question.text }}</p>
+                {% endif %}
+                {% if question.image %}
+                  <img src="{{ question.image.url }}" alt="{% tr "Question image" %}" class="img-fluid rounded mb-3" style="max-height: 220px;">
+                {% endif %}
+                <div class="options mt-3">
+                  {% for answer in question.answers.all %}
+                    <label class="option">
+                      <input type="radio" class="form-check-input mt-0 answer-radio"
+                             name="question-{{ question.id }}" value="{{ answer.id }}"
+                             data-question-id="{{ question.id }}" data-answer-id="{{ answer.id }}"
+                             {% if answer.id in selected_answers %}checked{% endif %}>
+                      {% if answer.text|has_khatt_img %}
+                        <span class="option-text khatt-content">{{ answer.text|rich }}</span>
+                      {% else %}
+                        <span class="option-text{% if question.math_enabled %} math-content{% endif %}">{{ answer.text }}</span>
+                      {% endif %}
+                    </label>
+                  {% endfor %}
+                </div>
+                <div class="mt-3 text-end">
+                  <span class="chip chip-pts saved-hint d-none"><i class="fa-solid fa-check"></i> {% tr "saved" %}</span>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+
+          <div class="quiz-navline">
+            <button type="button" class="btn btn-outline-accent" id="btn-prev"><i class="fa-solid fa-arrow-left me-1"></i> {% tr "Previous" %}</button>
+            <span class="question-counter" id="question-counter">1 / {{ quiz.questions.count }}</span>
+            <button type="button" class="btn btn-outline-accent" id="btn-next">{% tr "Next" %} <i class="fa-solid fa-arrow-right ms-1"></i></button>
+          </div>
+          <div class="mt-3 d-grid">
+            <button type="button" class="btn btn-accent btn-lg" id="btn-submit">
+              <i class="fa-solid fa-paper-plane me-1"></i> {% tr "Submit quiz" %}
+            </button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if not needs_access and not submitted %}
+    <script src="{% static 'js/quiz_taker.js' %}?v=2"></script>
+    {% if has_math and math_engine == "katex" %}
+      <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+      <script src="{% static 'js/math_render.js' %}"></script>
+    {% endif %}
+  {% endif %}
+{% endblock %}

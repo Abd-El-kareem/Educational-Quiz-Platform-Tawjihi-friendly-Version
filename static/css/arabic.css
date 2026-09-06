@@ -1,0 +1,79 @@
+[lang="ar"] body,
+[lang="ar"] input,
+[lang="ar"] textarea,
+[lang="ar"] select,
+[lang="ar"] .btn {
+  font-family: "Cairo", "Poppins", system-ui, sans-serif;
+}
+
+.katex {
+  font-family: "Cairo", KaTeX_Main, KaTeX_Math, sans-serif !important;
+}
+
+[dir="rtl"] .fa-arrow-left {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .fa-arrow-right {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .fa-chevron-right,
+[dir="rtl"] .fa-chevron-left {
+  transform: scaleX(-1);
+}
+
+.khatt-content img {
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+}
+
+.khatt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.5rem;
+}
+
+.khatt-grid .khatt-struct,
+.khatt-grid .khatt-literal {
+  min-height: 48px;
+}
+
+.khatt-struct,
+.khatt-literal {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+.khatt-struct:hover,
+.khatt-literal:hover {
+  border-color: var(--dark-color);
+  background: var(--orange-050);
+}
+
+.khatt-struct img,
+.khatt-literal img {
+  flex: 0 0 auto;
+  min-width: 28px;
+}
+
+.khatt-raw {
+  direction: ltr;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.khatt-nested {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.khatt-nested .btn {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8rem;
+}

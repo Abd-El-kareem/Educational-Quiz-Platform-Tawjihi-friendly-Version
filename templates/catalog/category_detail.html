@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n_tags %}
+{% block title %}{{ category.name }}{% endblock %}
+{% block content %}
+  <div class="container pb-5">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}"><i class="fa-solid fa-house me-1"></i>{% tr "Home" %}</a></li>
+        <li class="breadcrumb-item active">{{ category.name }}</li>
+      </ol>
+    </nav>
+
+    <h1 class="page-title mb-1">
+      <i class="fa-solid fa-layer-group title-icon me-2"></i>{{ category.name }}
+    </h1>
+    <p class="text-muted mb-4">
+      {{ category.quiz_count }} {% if category.quiz_count == 1 %}{% tr "quiz" %}{% else %}{% tr "quizzes" %}{% endif %}
+    </p>
+
+    {% if quizzes %}
+      <div class="row g-3">
+        {% for quiz in quizzes %}
+          <div class="col-12">
+            <a href="{% url 'quizzes:quiz_take' quiz.pk %}"
+               class="card card-ember card-link-card quiz-row text-decoration-none">
+              <span class="quiz-row-icon"><i class="fa-solid fa-clipboard-question"></i></span>
+              <span class="quiz-row-main">
+                <span class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                  <span class="fw-bold" style="color: var(--text);">{{ quiz.title }}</span>
+                  {% if not quiz.is_public %}
+                    <span class="chip chip-private"><i class="fa-solid fa-lock"></i>{% tr "Private" %}</span>
+                  {% endif %}
+                  {% if quiz.time_limit_minutes %}
+                    <span class="chip chip-time"><i class="fa-solid fa-hourglass-half"></i>{{ quiz.time_limit_minutes }} {% tr "min" %}</span>
+                  {% endif %}
+                </span>
+                <span class="d-block text-muted small">
+                  {{ quiz.question_count }} {% if quiz.question_count == 1 %}{% tr "question" %}{% else %}{% tr "question" %}{% tr "s" %}{% endif %}
+                </span>
+              </span>
+              <i class="fa-solid fa-chevron-right quiz-row-arrow"></i>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card score-empty mx-auto" style="max-width: 560px;">
+        <div class="card-body text-center">
+          <i class="fa-solid fa-clipboard-question mb-3" style="font-size: 2.5rem;"></i>
+          <p class="text-muted mb-0">{% tr "No quizzes in this category yet." %}</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

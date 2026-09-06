@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n_tags %}
+{% block title %}{% tr "Browse Quizzes" %}{% endblock %}
+{% block content %}
+  <section class="hero text-center">
+    <div class="container position-relative">
+      <span class="hero-overline"><i class="fa-solid fa-graduation-cap"></i>{% tr "Quiz Platform" %}</span>
+      {% if user.is_authenticated %}
+        <h1 class="mt-2 mb-2">{% trf "Welcome back, {username}!" username=user.username %}</h1>
+      {% else %}
+        <h1 class="mt-2 mb-2">{% tr "Test & Educate Yourself Now!" %}</h1>
+      {% endif %}
+      <p class="mx-auto mb-4">
+        {% tr "Browse our library of educational quizzes and put your knowledge to the test." %}
+      </p>
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="#categories" class="btn btn-accent btn-lg">
+          <i class="fa-solid fa-clipboard-list me-2"></i>{% tr "Start Quizzing" %}
+        </a>
+        {% if not user.is_authenticated %}
+          <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">
+            <i class="fa-solid fa-user-plus me-2"></i>{% tr "Get Started" %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="container pb-5" id="categories">
+    <h2 class="page-title text-center mb-1">
+      <i class="fa-solid fa-layer-group title-icon me-2"></i>{% tr "Categories" %}
+    </h2>
+    <p class="text-center text-muted mb-4">{% tr "Pick a category to begin" %}</p>
+    {% if categories %}
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+        {% for category in categories %}
+          <div class="col">
+            <a href="{% url 'catalog:category_detail' category.pk %}"
+               class="card card-ember card-link-card cat-card h-100 text-decoration-none"
+               aria-label="{{ category.name }}">
+              <div class="card-body">
+                <span class="cat-icon">
+                  {% cycle 'fa-book-open' 'fa-flask' 'fa-globe' 'fa-brain' 'fa-puzzle-piece' 'fa-square-root-variable' as cat_icon silent %}
+                  <i class="fa-solid {{ cat_icon }}"></i>
+                </span>
+                <h3 class="card-title">{{ category.name }}</h3>
+                <span class="chip chip-neutral">{{ category.quiz_count }} {% if category.quiz_count == 1 %}{% tr "quiz" %}{% else %}{% tr "quizzes" %}{% endif %}</span>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card score-empty mx-auto" style="max-width: 560px;">
+        <div class="card-body text-center">
+          <i class="fa-solid fa-layer-group mb-3" style="font-size: 2.5rem;"></i>
+          <p class="text-muted mb-0">{% tr "No categories yet. Run `python manage.py seed_demo` to add sample data." %}</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

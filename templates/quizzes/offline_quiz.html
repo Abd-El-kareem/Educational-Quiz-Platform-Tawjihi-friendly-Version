@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ quiz_title }} — {{ strings.offline_badge }}</title>
+<style>
+{{ offline_css|safe }}
+{% if has_katex %}{{ katex_css|safe }}{% endif %}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11.5L12 3l9 8.5"/><path d="M5 10v10h14V10"/><path d="M9.5 20v-6h5v6"/>
+    </symbol>
+    <symbol id="i-quiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7.5h6"/><path d="M9 12h2"/><path d="M13 12h2"/><path d="M9 16h2"/><path d="M13 16h2"/>
+    </symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3c0 6 12 5 12 0"/><path d="M6 21c0-6 12-5 12 0"/><path d="M8.5 12h7"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M12 3l2.6 5.6 6.1.6-4.6 4 1.3 6-5.4-3-5.4 3 1.3-6-4.6-4 6.1-.6z"/>
+    </symbol>
+    <symbol id="i-question" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.6 2.6 0 1 1 4.3 2c-.9.6-1.7 1.1-1.7 2.3"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 12.5l5 5L20 6.5"/>
+    </symbol>
+    <symbol id="i-xmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/>
+    </symbol>
+    <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+    </symbol>
+    <symbol id="i-paper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20.5L20 12 4 3.5 5 9.8l9 2.2-9 2.2z"/>
+    </symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11a8 8 0 1 0-2.3 5.6"/>
+    </symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 21V4"/><path d="M5 4c3-2 6 2 9 0v9c-3 2-6-2-9 0"/>
+    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v11"/><path d="M6 9l6 6 6-6"/><path d="M4 20h16"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="container pb-5">
+  <header class="offline-top">
+    <h1 class="page-title">{{ quiz_title }}</h1>
+    <p class="text-muted mb-0">
+      {{ category_name }} · {{ question_count }} {{ strings.question }}{% if question_count != 1 %}{{ strings.s }}{% endif %} · {{ total_points }} {{ strings.points_total }}
+    </p>
+  </header>
+
+  <div class="offline-note">
+    <svg class="ico"><use href="#i-download"/></svg>
+    <span>{{ strings.offline_note }}</span>
+  </div>
+
+  <div class="quiz-layout">
+    <aside class="quiz-aside">
+      <svg class="ico aside-icon"><use href="#i-quiz"/></svg>
+      <span class="aside-label">{{ strings.quiz }}</span>
+      <span class="aside-value">{{ quiz_title }}</span>
+      <span class="aside-label">{{ strings.category }}</span>
+      <span class="aside-value">{{ category_name }}</span>
+      <span class="aside-label">{{ strings.question }}</span>
+      <span class="aside-value">{{ question_count }}</span>
+      <hr class="aside-divider">
+      {% if time_limit_minutes %}
+        <span class="timer-badge" id="timer-badge">
+          <svg class="ico"><use href="#i-hourglass"/></svg>{{ strings.time_remaining }}:
+          <span id="timer-count">--:--</span>
+        </span>
+      {% endif %}
+      <span class="chip chip-pts w-100 justify-content-center">
+        <svg class="ico"><use href="#i-star"/></svg>{{ total_points }} {{ strings.points_total }}
+      </span>
+    </aside>
+
+    <div id="quiz-zone" class="min-w-0">
+      <div id="quiz-widget"
+           data-quiz-id="{{ quiz.pk }}"
+           data-total="{{ total_points }}"
+           {% if time_limit_minutes %}data-time-limit="{{ time_limit_minutes }}"{% endif %}>
+
+        <div class="alert d-none" id="unanswered-alert">
+          <strong>{{ strings.unanswered_alert }}</strong>
+          <ul class="unanswered-list" id="unanswered-list"></ul>
+        </div>
+
+        {% for q in questions %}
+        <div class="card question-panel mb-3" id="question-{{ q.pk }}"
+             data-question-id="{{ q.pk }}" data-points="{{ q.points }}" style="display:none;">
+          <div class="card-body">
+            <div class="quiz-question-head mb-3">
+              <h2 class="question-title">
+                <svg class="ico title-icon"><use href="#i-question"/></svg>{{ strings.question }} {{ q.index }}
+              </h2>
+              <span class="chip chip-pts"><svg class="ico"><use href="#i-star"/></svg>{{ q.points }} {{ strings.pts }}</span>
+            </div>
+            {% if q.is_khatt %}
+              <p class="question-text mb-3 quote-question khatt-content">{{ q.text_html }}</p>
+            {% elif has_katex and q.math_enabled %}
+              <p class="question-text mb-3 quote-question math-content">{{ q.text_html }}</p>
+            {% else %}
+              <p class="question-text mb-3 quote-question">{{ q.text_html }}</p>
+            {% endif %}
+            {% if q.image %}
+              <img src="{{ q.image }}" alt="{{ strings.question_image }}" class="img-fluid rounded" style="max-height: 220px;">
+            {% endif %}
+            <div class="options">
+              {% for a in q.answers %}
+                <label class="option">
+                  <input type="radio" class="form-check-input answer-radio"
+                         name="question-{{ q.pk }}" value="{{ a.id }}"
+                         data-question-id="{{ q.pk }}" data-answer-id="{{ a.id }}"
+                         {% if a.correct %}data-correct="1"{% endif %}>
+                  <span class="option-text{% if q.is_khatt %} khatt-content{% elif has_katex and q.math_enabled %} math-content{% endif %}">{{ a.html }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            <div class="mt-3 text-end">
+              <span class="chip chip-pts saved-hint d-none"><svg class="ico"><use href="#i-check"/></svg>{{ strings.saved }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="quiz-navline">
+          <button type="button" class="btn btn-outline-accent btn-sm" id="btn-prev">
+            <svg class="ico"><use href="#i-prev"/></svg>{{ strings.previous }}
+          </button>
+          <span class="question-counter" id="question-counter">1 / {{ question_count }}</span>
+          <button type="button" class="btn btn-outline-accent btn-sm" id="btn-next">
+            {{ strings.next }}<svg class="ico"><use href="#i-next"/></svg>
+          </button>
+        </div>
+        <div class="mt-3 d-grid">
+          <button type="button" class="btn btn-accent btn-lg" id="btn-submit">
+            <svg class="ico"><use href="#i-paper"/></svg>{{ strings.submit_quiz }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="quiz-results" class="d-none">
+    <div class="card results-card">
+      <div class="card-body text-center">
+        <svg class="ico results-icon"><use href="#i-flag"/></svg>
+        <h2 class="results-title" id="results-summary"></h2>
+        <p class="text-muted mb-1" id="results-correct"></p>
+        <p class="text-muted mb-0" id="results-note"></p>
+      </div>
+    </div>
+    <div class="results-body" id="results-body"></div>
+    <div class="mt-4 d-grid">
+      <button type="button" class="btn btn-accent" id="btn-retake">
+        <svg class="ico"><use href="#i-rotate"/></svg>{{ strings.retake }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.OFFLINE_LANG = "{{ lang }}";
+window.OFFLINE_I18N = {{ i18n_json|safe }};
+</script>
+{% if has_katex %}
+<script>{{ katex_js|safe }}</script>
+<script>{{ katex_autorender_js|safe }}</script>
+{% endif %}
+<script>{{ offline_js|safe }}</script>
+</body>
+</html>

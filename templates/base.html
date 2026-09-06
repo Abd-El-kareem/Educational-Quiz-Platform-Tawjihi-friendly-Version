@@ -1,0 +1,187 @@
+{% load i18n_tags %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{{ dir }}" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% tr "Quiz Platform" %}{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230C5446'/%3E%3Cpath d='M32 16l22 9-22 9-22-9z' fill='%23FF6700'/%3E%3Cpath d='M16 35v9c0 4 7 7 16 7s16-3 16-7v-9l-16 6-16-6z' fill='%23FF6700' opacity='.9'/%3E%3C/svg%3E">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("quiz-theme");
+        var dark = stored === "dark" ||
+          (stored === null &&
+            window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+      } catch (e) {
+        document.documentElement.setAttribute("data-bs-theme", "light");
+      }
+    })();
+  </script>
+  <script>
+    window.QUIZ_LANG = "{{ LANGUAGE_CODE|default:'en' }}";
+    window.QUIZ_L10N = {{ QUIZ_L10N_JSON|safe }};
+    window.Q = function (key) {
+      if (window.QUIZ_LANG === "ar" && window.QUIZ_L10N && window.QUIZ_L10N[key] != null) {
+        return window.QUIZ_L10N[key];
+      }
+      return key;
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  {% if LANGUAGE_CODE == "ar" %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="{% static 'css/arabic.css' %}">
+  {% else %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+  {% endif %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+  <style>
+    .khatt-content img { max-width: 100%; height: auto; vertical-align: middle; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#main-content">{% tr "Skip to content" %}</a>
+<nav class="navbar navbar-expand-lg site-navbar" aria-label="Main">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'catalog:home' %}">
+      <span class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+      {% tr "Quiz Platform" %}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+            aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarMain">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.app_name == 'catalog' %}active{% endif %}"
+             {% if request.resolver_match.app_name == 'catalog' %}aria-current="page"{% endif %}
+             href="{% url 'catalog:home' %}"><i class="fa-solid fa-house me-1"></i>{% tr "Home" %}</a>
+        </li>
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.app_name == 'scoring' %}active{% endif %}"
+               {% if request.resolver_match.app_name == 'scoring' %}aria-current="page"{% endif %}
+               href="{% url 'scoring:score_list' %}"><i class="fa-solid fa-trophy me-1"></i>{% tr "My Scores" %}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.app_name == 'quizzes' and request.resolver_match.url_name == 'quiz_create' %}active{% endif %}"
+               {% if request.resolver_match.app_name == 'quizzes' and request.resolver_match.url_name == 'quiz_create' %}aria-current="page"{% endif %}
+               href="{% url 'quizzes:quiz_create' %}"><i class="fa-solid fa-plus me-1"></i>{% tr "New Quiz" %}</a>
+          </li>
+          <li class="nav-item d-none d-lg-inline-flex align-self-center">
+            <span class="nav-link fst-normal nav-greeting">{% trf "Hi, {username}" username=user.username %}</span>
+          </li>
+        {% endif %}
+        <li class="nav-item dropdown utility-group">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-globe me-1"></i>{% if LANGUAGE_CODE == "en" %}العربية{% else %}English{% endif %}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <form method="post" action="{% url 'quizzes:set_language' %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button name="language" value="en" class="dropdown-item">English</button>
+              </form>
+            </li>
+            <li>
+              <form method="post" action="{% url 'quizzes:set_language' %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button name="language" value="ar" class="dropdown-item">العربية</button>
+              </form>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item ms-lg-2">
+          <button type="button" class="theme-toggle-btn" id="theme-toggle"
+                  aria-label="{% tr "Toggle theme" %}" aria-pressed="false" title="{% tr "Toggle theme" %}">
+            <i class="fa-solid fa-sun" id="theme-icon"></i>
+          </button>
+        </li>
+        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-accent" type="submit">
+                <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>{% tr "Log out" %}
+              </button>
+            </form>
+          {% else %}
+            <div class="d-flex gap-2 justify-content-center">
+              <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-light">{% tr "Log in" %}</a>
+              <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-accent">{% tr "Register" %}</a>
+            </div>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="site-main" id="main-content">
+  {% if messages %}
+    <div class="container pt-3">
+      {% for message in messages %}
+        {% if message.tags == "error" %}
+          <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% elif message.tags == "success" %}
+          <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% elif message.tags == "warning" %}
+          <div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% else %}
+          <div class="alert alert-info alert-dismissible fade show mt-2" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  (function () {
+    var btn = document.getElementById("theme-toggle");
+    var icon = document.getElementById("theme-icon");
+    if (!btn) return;
+    function refresh() {
+      var dark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+      btn.setAttribute("aria-pressed", String(dark));
+      if (icon) {
+        icon.classList.toggle("fa-sun", !dark);
+        icon.classList.toggle("fa-moon", dark);
+      }
+    }
+    btn.addEventListener("click", function () {
+      var dark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+      var next = dark ? "light" : "dark";
+      document.documentElement.setAttribute("data-bs-theme", next);
+      try { localStorage.setItem("quiz-theme", next); } catch (e) {}
+      refresh();
+    });
+    refresh();
+  })();
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

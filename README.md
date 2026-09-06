@@ -4,7 +4,7 @@ A full-stack educational quiz platform built with Django, Django REST Framework,
 and vanilla JavaScript.
 
 # Demo
-![Quiz Platform Demo](demo.gif)
+![Quiz Platform demo](demo.gif)
 
 ## Features
 
